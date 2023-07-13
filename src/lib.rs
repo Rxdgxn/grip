@@ -33,7 +33,7 @@ macro_rules! push {
     };
 }
 
-pub fn grep(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>, Error> {
+pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>, Error> {
     let mut wanted: Vec<String> = Vec::new();
     let mut unwanted: Vec<String> = Vec::new();
 
@@ -41,7 +41,7 @@ pub fn grep(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>,
         let file_res = std::fs::read_to_string(filename);
         match file_res {
             Ok(_) => {}
-            Err(_) => return Err(Error::msg(format!("File {filename} doesn't exist")))
+            Err(_) => continue // return Err(Error::msg(format!("File {filename} doesn't exist or format is not supported")))
         }
         let file = file_res.unwrap();
 
@@ -65,11 +65,7 @@ pub fn grep(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>,
             };
             
             let num = &(lc.to_string() + ":");
-            let pre_file = match files.len() {
-                1 => "".to_string(),
-                _ => filename.to_string() + ":"
-            };
-            let prefix = pre_file + match flags.numbers {
+            let prefix = filename.to_string() + ":" + match flags.numbers {
                 true => num,
                 false => ""
             };
