@@ -45,13 +45,14 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>,
         }
         let file = file_res.unwrap();
 
-        let split = file.split('\n'); // Note: empty lines are not counted
+        let split = file.split('\n');
         let mut lc = 1;
 
         for line in split {
             let clone = line.clone();
 
             if clone.trim().is_empty() {
+                lc += 1;
                 continue;
             }
 
