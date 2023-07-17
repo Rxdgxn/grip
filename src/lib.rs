@@ -1,5 +1,3 @@
-use anyhow::Error;
-
 #[derive(Debug)]
 pub struct Flags {
     numbers: bool,
@@ -33,7 +31,7 @@ macro_rules! push {
     };
 }
 
-pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>, Error> {
+pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Vec<String> {
     let mut wanted: Vec<String> = Vec::new();
     let mut unwanted: Vec<String> = Vec::new();
 
@@ -41,7 +39,7 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>,
         let file_res = std::fs::read_to_string(filename);
         match file_res {
             Ok(_) => {}
-            Err(_) => continue // return Err(Error::msg(format!("File {filename} doesn't exist or format is not supported")))
+            Err(_) => continue
         }
         let file = file_res.unwrap();
 
@@ -49,7 +47,7 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>,
         let mut lc = 1;
 
         for line in split {
-            let clone = line.clone();
+            let clone = line.clone().trim();
 
             if clone.trim().is_empty() {
                 lc += 1;
@@ -93,7 +91,7 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Result<Vec<String>,
     }
 
     if flags.invert {
-        return Ok(unwanted);
+        return unwanted;
     }
-    Ok(wanted)
+    wanted
 }

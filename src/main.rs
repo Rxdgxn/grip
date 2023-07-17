@@ -38,8 +38,13 @@ fn main() {
                 pattern = &args[i][1..args[i].len()-1];
             }
             else {
-                let md = fs::metadata(&args[i]).unwrap();
-                files.append(&mut parse_path(&args[i], md).unwrap());
+                let md = fs::metadata(&args[i]);
+                match md {
+                    Ok(s) => {
+                        files.append(&mut parse_path(&args[i], s).unwrap());
+                    }
+                    _ => {}
+                };
             }
         }
     }
@@ -54,10 +59,10 @@ fn main() {
     let files: Vec<&str> = files.iter().map(|f| f as &str).collect();
 
     let results = grip(pattern, &flags, &files);
-    match results {
-        Ok(xs) => {
-            for x in xs { println!("{x}"); }
-        }
-        Err(e) => println!("[ERROR]: {e}")
+    if results.is_empty() {
+        println!("\x1b[0;31mNo matches found. Try respelling the pattern or check if the input files exist.\x1b[0m");
+    }
+    for m in results {
+        println!("{m}");
     }
 }
