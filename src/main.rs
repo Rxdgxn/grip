@@ -2,12 +2,11 @@
 use grip::*;
 use std::fs;
 
-fn parse_path(path: &str, md: fs::Metadata) -> Option<Vec<String>> {
+fn parse_path(path: &str, md: fs::Metadata) -> Vec<String> {
     let mut files: Vec<String> = Vec::new();
 
     if md.is_file() {
         files.push(path.to_string());
-        return Some(files);
     }
     else if md.is_dir() {
         let content = fs::read_dir(path).unwrap();
@@ -15,12 +14,11 @@ fn parse_path(path: &str, md: fs::Metadata) -> Option<Vec<String>> {
             let de = item.unwrap().path();
             let p = de.to_str().unwrap();
             let new_md = fs::metadata(p).unwrap();
-            files.append(&mut parse_path(p, new_md).unwrap());
+            files.append(&mut parse_path(p, new_md));
         }
-        return Some(files);
     }
 
-    None
+    files
 }
 
 fn main() {
@@ -40,8 +38,8 @@ fn main() {
             else {
                 let md = fs::metadata(&args[i]);
                 match md {
-                    Ok(s) => {
-                        files.append(&mut parse_path(&args[i], s).unwrap());
+                    Ok(m) => {
+                        files.append(&mut parse_path(&args[i], m));
                     }
                     _ => {}
                 };
@@ -50,7 +48,7 @@ fn main() {
     }
 
     if pattern.is_empty() {
-        println!("[ERROR]: Pattern was not specified or it's empty");
+        println!("\x1b[0;31m[ERROR]: Pattern was not specified or it's empty\x1b[0m");
         return;
     }
 
