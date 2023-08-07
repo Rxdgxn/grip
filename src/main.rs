@@ -30,6 +30,12 @@ fn parse_path(path: Path, md: fs::Metadata, excluded: &mut Paths) -> Paths {
     files
 }
 
+macro_rules! err {
+    ($c: expr) => {
+        println!("\x1b[0;31m{}\x1b[0m", $c);
+    };
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let mut flags: Vec<&str> = Vec::new();
@@ -66,7 +72,7 @@ fn main() {
     }
 
     if pattern.is_empty() {
-        println!("\x1b[0;31m[ERROR]: Pattern was not specified or it's empty\x1b[0m");
+        err!("Pattern was not specified or it's empty.");
         return;
     }
 
@@ -74,7 +80,7 @@ fn main() {
     let files: Vec<&str> = files.iter().map(|f| f as &str).collect();
     let results = grip(pattern, &flags, &files);
     if results.is_empty() {
-        println!("\x1b[0;31mNo matches found. Try respelling the pattern or check if the input files exist.\x1b[0m");
+        err!("No matches found. Try respelling the pattern or check if the input files exist.");
         return;
     }
 
