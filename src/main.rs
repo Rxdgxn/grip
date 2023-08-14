@@ -14,7 +14,19 @@ fn parse_path(path: Path, md: fs::Metadata, excluded: &mut Paths) -> Paths {
 
     if !excluded.contains(&path) {
         if md.is_file() {
-            files.push(path.to_string());
+            // Grip applies .gitignore rules forcefully (TODO: toggle flag?)
+            if path.ends_with(".gitignore") {
+                let x = fs::read_to_string(&path).unwrap();
+                let content = x.split('\n');
+                let prev_path = &path[0..path.len() - 10]; // 10 = len(".gitignore")
+                for mut p in content {
+                    if p.starts_with('/') { // This may break the search, it's been tested only with examples like '/target'
+                        p = &p[1..p.len()];
+                    }
+                    excluded.push(prev_path.to_string() + p);
+                }
+            }
+            files.push(path);
         }
         else if md.is_dir() {
             let content = fs::read_dir(path).unwrap();
@@ -49,9 +61,11 @@ fn main() {
             flags.push(&args[i]);
         }
         else {
+            // Pattern delimiters (custom made since powershell wants to mess with quotes)
             if args[i].starts_with('=') && args[i].ends_with('=') {
                 pattern = &args[i][1..args[i].len()-1];
             }
+            // Prefix for excluding certain paths (full paths from the root folder of the program must be provided however)
             else if args[i].starts_with('%') {
                 excluded.push(args[i][1..args[i].len()].to_string());
             }
