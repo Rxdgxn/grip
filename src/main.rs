@@ -61,7 +61,7 @@ fn main() {
             flags.push(&args[i]);
         }
         else {
-            // Pattern delimiters (custom made since powershell wants to mess with quotes)
+            // Pattern delimiters (custom made since Powershell wants to mess with quotes)
             if args[i].starts_with('=') && args[i].ends_with('=') {
                 pattern = &args[i][1..args[i].len()-1];
             }

@@ -4,7 +4,8 @@ pub struct Flags {
     names: bool,
     insensitive: bool,
     invert: bool,
-    entire: bool
+    entire: bool,
+    highlight: bool
 }
 
 impl Flags {
@@ -15,15 +16,16 @@ impl Flags {
             insensitive: flags.contains(&"-i"),
             invert: flags.contains(&"-v"),
             entire: flags.contains(&"-x"),
+            highlight: flags.contains(&"-hl")
         }
     }
 }
 
 macro_rules! push {
-    ($x: expr, $flags: expr, $filename: expr, $prefix: expr, $clone: expr, $i: expr) => {
+    ($x: expr, $flags: expr, $filename: expr, $prefix: expr, $line_clone: expr, $i: expr) => {
         $x.push(match $flags.names {
             true => $filename.to_string(),
-            false => "\x1b[0;45m".to_string() + &$prefix + "\x1b[0m" + &$clone
+            false => "\x1b[0;45m".to_string() + &$prefix + "\x1b[0m" + &$line_clone
         });
         if $flags.names && $i {
             break;
@@ -47,9 +49,9 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Vec<String> {
         let mut lc = 1;
 
         for line in split {
-            let clone = line.clone().trim();
+            let mut line_clone = String::from(line.clone().trim());
 
-            if clone.trim().is_empty() {
+            if line_clone.trim().is_empty() {
                 lc += 1;
                 continue;
             }
@@ -73,19 +75,25 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Vec<String> {
 
             if flags.entire {
                 if pat == line.trim() {
-                    push!(wanted, flags, filename, prefix, clone, !flags.invert);
+                    push!(wanted, flags, filename, prefix, line_clone, !flags.invert);
                 }
                 else {
-                    push!(unwanted, flags, filename, prefix, clone, flags.invert);
+                    push!(unwanted, flags, filename, prefix, line_clone, flags.invert);
                 }
                 continue;
             }
 
-            if line.contains(&pat) {
-                push!(wanted, flags, filename, prefix, clone, !flags.invert);
+            let start = line.find(&pat);
+            if let Some(idx) = start {
+                if flags.highlight {
+                    let diff = line.len() - line.trim_start().len();
+                    line_clone.insert_str(idx - diff, "\x1b[0;42m");
+                    line_clone.insert_str(idx + pat.len() - diff + "\x1b[0;42m".len(), "\x1b[0m");
+                }
+                push!(wanted, flags, filename, prefix, line_clone, !flags.invert);
             }
             else {
-                push!(unwanted, flags, filename, prefix, clone, flags.invert);
+                push!(unwanted, flags, filename, prefix, line_clone, flags.invert);
             }
         }
     }
