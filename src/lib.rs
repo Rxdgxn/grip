@@ -51,7 +51,7 @@ pub fn grip(pattern: &str, flags: &Flags, files: &[&str]) -> Vec<String> {
         for line in split {
             let mut line_clone = String::from(line.clone().trim());
 
-            if line_clone.trim().is_empty() {
+            if line_clone.is_empty() {
                 lc += 1;
                 continue;
             }

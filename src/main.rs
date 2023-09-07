@@ -9,13 +9,12 @@ use std::fs;
 type Path = String;
 type Paths = Vec<Path>;
 
-fn parse_path(path: Path, md: fs::Metadata, excluded: &mut Paths) -> Paths {
+fn parse_path(path: Path, md: fs::Metadata, excluded: &mut Paths, gitignore: bool) -> Paths {
     let mut files: Paths = Vec::new();
 
     if !excluded.contains(&path) {
         if md.is_file() {
-            // Grip applies .gitignore rules forcefully (TODO: toggle flag?)
-            if path.ends_with(".gitignore") {
+            if path.ends_with(".gitignore") && gitignore {
                 let x = fs::read_to_string(&path).unwrap();
                 let content = x.split('\n');
                 let prev_path = &path[0..path.len() - 10]; // 10 = len(".gitignore")
@@ -34,7 +33,7 @@ fn parse_path(path: Path, md: fs::Metadata, excluded: &mut Paths) -> Paths {
                 let de = item.unwrap().path();
                 let p = de.to_str().unwrap().to_string();
                 let new_md = fs::metadata(p.clone()).unwrap();
-                files.append(&mut parse_path(p, new_md, excluded));
+                files.append(&mut parse_path(p, new_md, excluded, gitignore));
             }
         }
     }
@@ -55,10 +54,17 @@ fn main() {
     let mut files: Paths = Vec::new();
     let mut excluded: Paths = Vec::new();
     let mut paths: Paths = Vec::new();
+    let mut gitignore = false;
 
     for i in 1 .. args.len() {
         if args[i].starts_with('-') {
-            flags.push(&args[i]);
+            // Pretty stupid considering that we have a system for flags, but it is what it is
+            if &args[i] == "-g" {
+                gitignore = true;
+            }
+            else {
+                flags.push(&args[i]);
+            }
         }
         else {
             // Pattern delimiters (custom made since Powershell wants to mess with quotes)
@@ -79,7 +85,7 @@ fn main() {
         let md = fs::metadata(path.clone());
         match md {
             Ok(m) => {
-                files.append(&mut parse_path(path, m, &mut excluded));
+                files.append(&mut parse_path(path, m, &mut excluded, gitignore));
             }
             _ => {}
         };
